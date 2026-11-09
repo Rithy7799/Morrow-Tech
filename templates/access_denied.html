@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Access restricted — MorrowTech{% endblock %}
+{% block content %}<main class="auth-page">
+    <section class="auth-card"><span class="eyebrow">Admin desk / Restricted</span>
+        <h1>This area is for <em>staff.</em></h1>
+        <p class="auth-intro">Your customer account can shop, review products, and manage favorites, but it cannot
+            access the admin desk.</p><a class="button button-dark button-full"
+            href="{{ url_for('storefront') }}">Return to shopping <span>→</span></a>
+    </section>
+</main>{% endblock %}

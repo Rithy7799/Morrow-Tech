@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Your profile — MorrowTech{% endblock %}
+{% block content %}<main class="profile-page">
+    <div class="profile-heading">
+        <div><span class="eyebrow">Your account / {{ account.role }}</span>
+            <h1>Hello, <em>{{ account.name.split(' ')[0] }}.</em></h1>
+            <p>{{ account.email }}</p>
+        </div><a class="button button-light" style="font-weight: bold; background-color: #e96363;"
+            href="{{ url_for('logout') }}">Log out <span>↗</span></a>
+    </div>
+    <div class="profile-settings">
+        <section class="profile-panel account-settings">
+            <div class="profile-avatar">{% if account.avatar %}<img height="200" src="{{ account.avatar }}" alt="Profile image">{%
+                else %}<span>{{ account.name[:1].upper() }}</span>{% endif %}</div>
+            <div><span class="eyebrow">Profile settings</span>
+                <h2>Edit your details</h2>
+            </div>{% if error %}<div class="form-error" role="alert">{{ error }}</div>{% endif %}
+            <form method="post" action="{{ url_for('update_profile') }}" enctype="multipart/form-data"
+                class="profile-form"><label>Full name<input name="name" required
+                        value="{{ account.name }}"></label><label>Email<input name="email" type="email" required
+                        value="{{ account.email }}"></label><label>Phone<input name="phone"
+                        value="{{ account.phone or '' }}" placeholder="+1 555 000 0000"></label><label>Address<textarea
+                        name="address" rows="3"
+                        placeholder="Shipping address">{{ account.address or '' }}</textarea></label><label>Profile
+                    image<input name="profile_image" type="file"
+                        accept="image/png,image/jpeg,image/webp"></label><label>Or image URL<input name="avatar"
+                        value="{{ account.avatar or '' }}" placeholder="https://..."></label><button
+                    class="button button-dark" type="submit">Save profile <span>→</span></button></form>
+        </section>
+        <section class="profile-panel payment-settings"><span class="eyebrow">Payment</span>
+            <h2>Saved card</h2>
+            <p class="muted-copy">Only the last four digits are saved. Full card numbers and security codes are never
+                stored.</p>
+            <form method="post" action="{{ url_for('update_profile') }}" class="profile-form"><input type="hidden"
+                    name="name" value="{{ account.name }}"><input type="hidden" name="email"
+                    value="{{ account.email }}"><label>Cardholder name<input name="card_name"
+                        value="{{ account.card_name or '' }}" placeholder="Name on card"></label><label>Card
+                    number<input name="card_number" inputmode="numeric"
+                        placeholder="•••• •••• •••• {{ account.card_last4 or '4242' }}"></label>
+                <div class="form-two"><label>Expiry date<input name="card_expiry"
+                            value="{{ account.card_expiry or '' }}" placeholder="MM / YY"></label><label>Card
+                        brand<select name="card_brand">
+                            <option>Visa</option>
+                            <option>Mastercard</option>
+                            <option>American Express</option>
+                        </select></label></div><button class="button button-dark" type="submit">Save payment details
+                    <span>→</span></button>
+            </form>{% if account.card_last4 %}<div class="saved-card"><strong>▰ {{ account.card_name or 'Saved card'
+                    }}</strong><span>•••• {{ account.card_last4 }} · {{ account.card_expiry }}</span></div>{% endif %}
+        </section>
+    </div>
+    <div class="profile-columns">
+        <section class="profile-panel" id="favorites"><span class="eyebrow">Saved for later</span>
+            <h2>Favorites</h2>{% if favorites %}<div class="favorite-grid">{% for product in favorites %}{% include
+                "_product_card.html" %}{% endfor %}</div>{% else %}<p class="muted-copy">Your saved pieces will appear here.</p>{% endif %}
+        </section>
+        <section class="profile-panel"><span class="eyebrow">Your history</span>
+            <h2>Orders</h2>{% if orders %}{% for order in orders %}<div class="profile-order">
+                <div><strong>Order #{{ order.id }}</strong><span>{{ order.created_at[:10] }}</span></div><strong>{{
+                    order.total|currency }}</strong><span class="status-pill">{{ order.status }}</span>
+            </div>{% endfor %}{% else %}<p class="muted-copy">You have not placed an order yet.</p>{% endif %}
+        </section>
+    </div>
+</main>{% endblock %}

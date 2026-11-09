@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}About MorrowTech{% endblock %}
+{% block content %}
+<main class="about-page">
+    <section class="about-intro">
+        <div><span class="eyebrow">A little about us</span>
+            <h1>Useful tech.<br><em>Better everyday.</em></h1>
+        </div>
+        <p>MorrowTech is a marketplace for practical electronics and everyday upgrades. We make it easier to find thoughtful gear, compare the essentials, and bring home something that earns its place.</p>
+    </section>
+    <section class="about-story">
+        <span class="about-number">01 / OUR APPROACH</span>
+        <div>
+            <h2>Less noise.<br><em>More useful things.</em></h2>
+            <p>From audio and wearables to workspace essentials, our shop is built around products with a clear purpose. Browse at your own pace, see straightforward product details, and choose what works for you.</p>
+            <a class="button button-dark" href="{{ url_for('storefront') }}#shop">Explore the shop <span>→</span></a>
+        </div>
+    </section>
+    <section class="about-principles" aria-label="What matters to us">
+        <div><span>01</span><h3>Practical by design</h3><p>Everyday electronics selected for the job they do.</p></div>
+        <div><span>02</span><h3>Clear choices</h3><p>Useful product details and simple ways to browse.</p></div>
+        <div><span>03</span><h3>Shopping made easy</h3><p>A straightforward path from discovery to checkout.</p></div>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Create account' if mode == 'register' else 'Log in' }} — Morrow Goods{% endblock %}
+{% block content %}<main class="auth-page">
+    <section class="auth-card"><span class="eyebrow">Morrow Goods / Account</span>
+        <h1>{% if mode == 'register' %}Make room for <em>good things.</em>{% else %}Welcome <em>back.</em>{% endif %}
+        </h1>
+        <p class="auth-intro">{% if mode == 'register' %}Save favorites, follow orders, and leave notes on the things
+            you love.{% else %}Your saved pieces and order history are waiting.{% endif %}</p>{% if error %}<div
+            class="form-error">{{ error }}</div>{% endif %}<form method="post" class="auth-form">{% if mode ==
+            'register' %}<label>Name<input name="name" required placeholder="Your name"></label>{% endif
+            %}<label>Email<input name="email" type="email" required
+                        placeholder="you@example.com"></label><label>Password<input name="password" type="password" required
+                    minlength="6" placeholder="At least 6 characters"></label>{% if mode == 'register' %}<label>Confirm
+                password<input name="confirm_password" type="password" required minlength="6"
+                            placeholder="Repeat your password"></label>{% endif %}{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}<button class="button button-dark button-full"
+                type="submit">{{ 'Create account' if mode == 'register' else 'Log in' }} <span>→</span></button></form>
+                    <p class="auth-switch">{% if mode == 'register' %}Already have an account? <a href="{{ url_for('login', next=next_url) if next_url else url_for('login') }}">Log
+                        in</a>{% else %}New here? <a href="{{ url_for('register', next=next_url) if next_url else url_for('register') }}">Create an account</a>{% endif %}</p>
+    </section>
+</main>{% endblock %}

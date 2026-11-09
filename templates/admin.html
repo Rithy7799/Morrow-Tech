@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Admin desk — Morrow Goods{% endblock %}
+{% block content %}
+<main class="admin-page">
+    <div class="admin-top">
+        <div><span class="eyebrow">MorrowTech / Control room / {{ current_user.role }}</span>
+            <h1>Good morning, <em>{{ current_user.name.split(' ')[0] }}.</em></h1>
+        </div><a class="button button-light" href="{{ url_for('storefront') }}">View storefront <span>↗</span></a>
+    </div>
+    <section class="stats-grid">
+        <div class="stat-card"><span>Catalog items</span><strong>{{ product_count }}</strong><small>Live in
+                storefront</small></div>
+        <div class="stat-card"><span>Orders received</span><strong>{{ order_count }}</strong><small>Across all
+                statuses</small></div>
+        <div class="stat-card accent-stat"><span>Gross revenue</span><strong>{{ revenue|currency
+                }}</strong><small>Excluding cancelled orders</small></div>
+    </section>
+    <div class="admin-tabs" role="tablist" aria-label="Admin data views" data-admin-tabs>
+        <button class="admin-tab" type="button" role="tab" id="admin-tab-products" aria-controls="admin-panel-products" aria-selected="{{ 'true' if active_view == 'products' else 'false' }}" data-admin-tab tabindex="{{ 0 if active_view == 'products' else -1 }}">Products</button>
+        <button class="admin-tab" type="button" role="tab" id="admin-tab-categories" aria-controls="admin-panel-categories" aria-selected="{{ 'true' if active_view == 'categories' else 'false' }}" data-admin-tab tabindex="{{ 0 if active_view == 'categories' else -1 }}">Categories</button>
+        <button class="admin-tab" type="button" role="tab" id="admin-tab-orders" aria-controls="admin-panel-orders" aria-selected="{{ 'true' if active_view == 'orders' else 'false' }}" data-admin-tab tabindex="{{ 0 if active_view == 'orders' else -1 }}">Orders</button>
+        {% if can_manage_users %}<button class="admin-tab" type="button" role="tab" id="admin-tab-users" aria-controls="admin-panel-users" aria-selected="{{ 'true' if active_view == 'users' else 'false' }}" data-admin-tab tabindex="{{ 0 if active_view == 'users' else -1 }}">Users</button>{% endif %}
+    </div>
+    <div class="admin-tab-panel" id="admin-panel-products" role="tabpanel" aria-labelledby="admin-tab-products" data-admin-panel tabindex="0" {% if active_view != 'products' %}hidden{% endif %}>
+        <section class="admin-panel">
+            <div class="panel-heading">
+                <div><span class="eyebrow">Inventory / Recent</span>
+                    <h2>Product catalog</h2>
+                </div>
+                <div class="panel-actions"><a class="button button-light" href="{{ url_for('manage_products') }}">View
+                        more <span>→</span></a><button class="button button-dark" data-product-modal>+ Add
+                        product</button></div>
+            </div>
+            <div class="inventory-list">{% for product in products %}<div class="inventory-row">
+                    <div class="mini-art" style="background:{{ product.color }}">{% if product.image1 %}<img
+                            src="{{ product.image1 }}" alt="{{ product.name }}">{% else %}{{ product.initials }}{% endif %}</div>
+                    <div class="inventory-name"><strong>{{ product.name }}</strong><span>{{ product.category }}</span>
+                    </div><strong>{{ product.price|currency }}</strong><span class="stock-label"><i></i> In stock</span>
+                </div>{% endfor %}</div>
+            <nav class="pagination" aria-label="Product pages">
+                {% if products_page > 1 %}<a href="{{ url_for('admin', view='products', products_page=products_page - 1) }}">← Previous</a>{% endif %}
+                <span>Page {{ products_page }} of {{ products_total_pages }} · {{ product_count }} products</span>
+                {% if products_page < products_total_pages %}<a href="{{ url_for('admin', view='products', products_page=products_page + 1) }}">Next →</a>{% endif %}
+            </nav>
+        </section>
+    </div>
+    <div class="admin-tab-panel" id="admin-panel-orders" role="tabpanel" aria-labelledby="admin-tab-orders" data-admin-panel tabindex="0" {% if active_view != 'orders' %}hidden{% endif %}>
+        <section class="admin-panel">
+            <div class="panel-heading">
+                <div><span class="eyebrow">Activity</span>
+                    <h2>Recent orders</h2>
+                </div>
+                </div>{% if orders %}<div class="orders-list">{% for order in orders %}<div class="order-row">
+                    <button type="button" class="order-invoice-trigger" data-invoice-id="{{ order.id }}"
+                    aria-label="View invoice for order {{ order.id }}">
+                    <span class="order-invoice-details"><strong>#{{ order.id }} · {{ order.customer_name }}</strong><span>{{ order.created_at[:10] }} ·
+                        {{ order.email }}</span></span><strong>{{ order.total|currency }}</strong>
+                    </button>
+                    <div class="order-right">
+                        <form method="post" action="{{ url_for('update_order_status', order_id=order.id) }}"><select
+                                name="status" onchange="this.form.submit()">{% for status in ['New', 'Packed',
+                                'Shipped', 'Cancelled'] %}<option {% if order.status==status %}selected{% endif %}>{{
+                                    status }}</option>{% endfor %}</select></form>
+                    </div>
+                </div>{% endfor %}</div>{% else %}<div class="empty-admin"><span>◌</span>
+                <p>No orders yet. They will appear here after checkout.</p>
+            </div>{% endif %}
+            <nav class="pagination" aria-label="Order pages">
+                {% if orders_page > 1 %}<a href="{{ url_for('admin', view='orders', orders_page=orders_page - 1) }}">← Previous</a>{% endif %}
+                <span>Page {{ orders_page }} of {{ orders_total_pages }} · {{ order_count }} orders</span>
+                {% if orders_page < orders_total_pages %}<a href="{{ url_for('admin', view='orders', orders_page=orders_page + 1) }}">Next →</a>{% endif %}
+            </nav>
+        </section>
+    </div>
+    <div class="admin-tab-panel" id="admin-panel-categories" role="tabpanel" aria-labelledby="admin-tab-categories" data-admin-panel tabindex="0" {% if active_view != 'categories' %}hidden{% endif %}>
+        {% include "_category_management.html" %}
+    </div>
+    {% if can_manage_users %}<div class="admin-tab-panel" id="admin-panel-users" role="tabpanel" aria-labelledby="admin-tab-users" data-admin-panel tabindex="0" {% if active_view != 'users' %}hidden{% endif %}>
+        <section class="admin-panel users-panel">
+        <div class="panel-heading">
+            <div><span class="eyebrow">People</span>
+                <h2>{{ user_count }} users and customers</h2>
+            </div><button class="button button-dark" data-customer-modal>+ Add customer</button>
+        </div>
+        <div class="users-list">{% for user in users %}<div class="user-row">
+                <div class="user-avatar">{{ user.name[:1].upper() }}</div>
+                <div><strong>{{ user.name }}</strong><span>{{ user.email }}</span></div><b
+                    class="role-badge role-{{ user.role }}">{{ user.role }}</b>
+            </div>{% endfor %}</div>
+            <nav class="pagination" aria-label="User pages">
+                {% if users_page > 1 %}<a href="{{ url_for('admin', view='users', users_page=users_page - 1) }}">← Previous</a>{% endif %}
+                <span>Page {{ users_page }} of {{ users_total_pages }} · {{ user_count }} users</span>
+                {% if users_page < users_total_pages %}<a href="{{ url_for('admin', view='users', users_page=users_page + 1) }}">Next →</a>{% endif %}
+            </nav>
+        </section>
+    </div>{% endif %}
+</main>
+<div class="modal-backdrop" data-product-dialog aria-hidden="true">
+    <section class="checkout-modal product-modal"><button class="icon-button modal-close" data-product-close
+            aria-label="Close">×</button><span class="eyebrow">Catalog / New item</span>
+        <h2>Add a product.</h2>
+        <form method="post" action="{{ url_for('add_product') }}" enctype="multipart/form-data"><label>Product
+                name<input name="name" required
+                    placeholder="e.g. Wireless headphones"></label><label>Description<textarea name="description"
+                    required rows="2" placeholder="A short description"></textarea></label>
+            <div class="form-two"><label>Category<select name="category" required>{% for category in categories %}<option value="{{ category.name }}">{{ category.name }}</option>{% endfor %}</select></label><label>Price<input name="price" type="number" min="0" step="0.01"
+                        required placeholder="48.00"></label></div><label>Color swatch<input name="color" type="color"
+                    value="#d9c7bd"></label>
+            <div class="image-slot-grid"><label>Image 1 <small>Main image</small><input name="image1" type="file"
+                        accept="image/png,image/jpeg,image/webp"></label><label>Image 2 <small>Gallery
+                        image</small><input name="image2" type="file"
+                        accept="image/png,image/jpeg,image/webp"></label><label>Image 3 <small>Gallery
+                        image</small><input name="image3" type="file" accept="image/png,image/jpeg,image/webp"></label>
+            </div><button class="button button-dark button-full" type="submit">Publish product <span>→</span></button>
+        </form>
+    </section>
+</div>
+{% if can_manage_users %}<div class="modal-backdrop" data-customer-dialog aria-hidden="true">
+    <section class="checkout-modal product-modal"><button class="icon-button modal-close" data-customer-close
+            aria-label="Close">×</button><span class="eyebrow">People / New account</span>
+        <h2>Create a user.</h2>
+        <form method="post" action="{{ url_for('create_customer') }}"><label>Full name<input name="name" required
+                    placeholder="User name"></label><label>Email<input name="email" type="email" required
+                    placeholder="user@example.com"></label><label>Role<select name="role">
+                    <option value="customer">Customer</option>
+                    <option value="user">Staff user</option>
+                </select></label><label>Password<input name="password" minlength="6" required
+                    placeholder="At least 6 characters"></label><label>Confirm password<input name="confirm_password"
+                    minlength="6" required placeholder="Repeat the password"></label><button
+                class="button button-dark button-full" type="submit">Create account <span>→</span></button></form>
+    </section>
+</div>{% endif %}
+<script>document.addEventListener('click', (event) => { const productDialog = document.querySelector('[data-product-dialog]'); const customerDialog = document.querySelector('[data-customer-dialog]'); if (event.target.closest('[data-product-modal]')) productDialog.classList.add('is-visible'); if (event.target.closest('[data-product-close]') || event.target === productDialog) productDialog.classList.remove('is-visible'); if (event.target.closest('[data-customer-modal]')) customerDialog.classList.add('is-visible'); if (event.target.closest('[data-customer-close]') || event.target === customerDialog) customerDialog.classList.remove('is-visible'); });</script>
+{% endblock %}

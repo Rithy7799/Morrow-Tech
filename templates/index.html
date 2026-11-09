@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}MorrowTech — Smart electronics, better prices{% endblock %}
+{% block content %}
+<main>
+    <section class="hero" id="story">
+        <div class="hero-copy"><span class="eyebrow">Limited-time electronics sale</span>
+            <h1>Big deals for <em>smart living.</em></h1>
+            <p>Daily essentials, fresh tech, and prices worth checking twice. Find your next favorite upgrade.</p><a
+                class="button button-dark" href="#shop">Shop now <span>→</span></a>
+        </div>
+        <div class="hero-stamp">
+            <div class="stamp-ring">MORROW<br>TECH<br><small>SALE 2026</small></div>
+            <div class="hero-shape"></div>
+        </div>
+        <div class="hero-note"><span>01 — 03</span><span>Small batch<br>essentials</span></div>
+    </section>
+    <section class="ticker">
+        <div class="ticker-track">
+            <div class="ticker-group">
+                <span class="ticker-item">GREEN WEEK SALE</span><span class="ticker-separator" aria-hidden="true">✳</span>
+                <span class="ticker-item">FREE SHIPPING OVER $75</span><span class="ticker-separator" aria-hidden="true">✳</span>
+                <span class="ticker-item">30-DAY RETURNS</span><span class="ticker-separator" aria-hidden="true">✳</span>
+                <span class="ticker-item" aria-hidden="true">GREEN WEEK SALE</span><span class="ticker-separator" aria-hidden="true">✳</span>
+                <span class="ticker-item" aria-hidden="true">FREE SHIPPING OVER $75</span><span class="ticker-separator" aria-hidden="true">✳</span>
+                <span class="ticker-item" aria-hidden="true">30-DAY RETURNS</span><span class="ticker-separator" aria-hidden="true">✳</span>
+            </div>
+            <div class="ticker-group" aria-hidden="true">
+                <span class="ticker-item">GREEN WEEK SALE</span><span class="ticker-separator">✳</span>
+                <span class="ticker-item">FREE SHIPPING OVER $75</span><span class="ticker-separator">✳</span>
+                <span class="ticker-item">30-DAY RETURNS</span><span class="ticker-separator">✳</span>
+                <span class="ticker-item">GREEN WEEK SALE</span><span class="ticker-separator">✳</span>
+                <span class="ticker-item">FREE SHIPPING OVER $75</span><span class="ticker-separator">✳</span>
+                <span class="ticker-item">30-DAY RETURNS</span><span class="ticker-separator">✳</span>
+            </div>
+        </div>
+    </section>
+    <section class="shop-section" id="shop">
+        <div class="section-heading">
+            <div><span class="eyebrow">Popular on Morrow</span>
+                <h2>Deals you’ll <em>love.</em></h2>
+            </div>
+            <p>Fast-moving electronics, clear prices, and fresh offers selected for everyday shoppers.</p>
+        </div>
+        <div class="category-row"><button class="filter-button active" data-filter="all">All products</button>{% for
+            category in categories %}<a class="filter-button"
+                href="{{ url_for('category', category_name=category.category) }}">{{ category.category }}</a>{% endfor
+            %}</div>
+        <div class="product-grid">{% for product in products %}{% include "_product_card.html" %}{% endfor %}</div>
+        <div class="pagination">{% if page > 1 %}<a href="{{ url_for('storefront', page=page - 1, q=query) }}#shop">←
+                Previous</a>{% endif %}<span>Page {{ page }} of {{ total_pages }}</span>{% if page < total_pages %}<a
+                href="{{ url_for('storefront', page=page + 1, q=query) }}#shop">Next →</a>{% endif %}</div>
+    </section>
+</main>
+<script>
+    document.addEventListener('click', (event) => { const button = event.target.closest('[data-filter]'); if (!button) return; document.querySelectorAll('[data-filter]').forEach((item) => item.classList.remove('active')); button.classList.add('active'); const filter = button.dataset.filter; document.querySelectorAll('.product-card').forEach((card) => { card.hidden = filter !== 'all' && card.dataset.category !== filter; }); });
+</script>
+{% endblock %}

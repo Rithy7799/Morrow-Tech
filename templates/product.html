@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — MorrowTech{% endblock %}
+{% block content %}
+<main class="product-page">
+    <a class="back-link" href="{{ url_for('storefront') }}#shop">← Back to the collection</a>
+    <section class="product-detail">
+        <div class="detail-gallery">
+            <div class="detail-art product-art" style="--product-color: {{ product.color }}">{% if product.image1 %}<img
+                    data-main-product-image src="{{ product.image1 }}" alt="{{ product.name }}">{% else %}<span>{{
+                    product.initials }}</span>
+                <div class="product-orbit"></div>{% endif %}
+            </div>{% if product.image1 or product.image2 or product.image3 %}<div class="image-thumbnails">{% for image
+                in [product.image1, product.image2, product.image3] %}{% if image %}<button type="button"
+                    data-product-image="{{ image }}"><img src="{{ image }}" alt="{{ product.name }} image"></button>{%
+                endif %}{% endfor %}</div>{% endif %}
+        </div>
+        <div class="detail-copy">
+            <span class="eyebrow">{{ product.category }} / MorrowTech</span>
+            <h2>{{ product.name }}</h2>
+            <p class="detail-price" style="color: red; font-size: 25px;">{{ product.price|currency }}</p>
+            <p class="detail-description">{{ product.description }} Designed with useful simplicity and made to become
+                part of your daily rhythm.</p>
+            <div class="detail-actions">
+                {% if current_user %}
+                <a class="button button-dark" href="{{ url_for('checkout', buy_now=product.id) }}">Buy now
+                    <span>→</span></a>
+                {% else %}
+                <a class="button button-dark" href="{{ url_for('login', next=url_for('checkout', buy_now=product.id)) }}">Log in to buy
+                    <span>→</span></a>
+                {% endif %}
+                <button class="button button-light"
+                    data-add-to-cart='{{ {"id": product.id, "name": product.name, "price": product.price, "color": product.color, "initials": product.initials, "image": product.image1}|tojson }}'>Add
+                    to bag <span>+</span></button>
+                <form method="post" action="{{ url_for('toggle_favorite', product_id=product.id) }}"><button
+                        class="favorite-button {% if is_favorite %}is-favorite{% endif %} text-danger" type="submit">{{ '♥ Saved' if
+                        is_favorite else '♡ Save to favorites' }}</button></form>
+            </div>
+            <div class="rating-summary"><strong>{% if average %}{{ average }} / 5{% else %}No ratings yet{% endif
+                    %}</strong><span>{% if average %}★★★★★{% else %}☆☆☆☆☆{% endif %} · {{ reviews|length }}
+                    comments</span></div>
+        </div>
+    </section>
+    <section class="reviews-section">
+        <div><span class="eyebrow">Notes from customers</span>
+            <h2>Kind words, <em>honestly.</em></h2>
+        </div>
+        <div class="reviews-list">
+            {% for review in reviews %}<article class="review">
+                <div><strong>{{ review.name }}</strong><span>{{ '★' * review.rating }}{{ '☆' * (5 - review.rating)
+                        }}</span></div>
+                <p>{{ review.comment }}</p>
+            </article>{% else %}<p class="muted-copy">Be the first to share your experience with this piece.</p>{%
+            endfor %}
+            {% if current_user %}<form class="review-form" method="post"
+                action="{{ url_for('add_review', product_id=product.id) }}"><span class="eyebrow">Leave a note</span>
+                <div class="form-two"><label>Rating<select name="rating">
+                            <option value="5">5 — Excellent</option>
+                            <option value="4">4 — Lovely</option>
+                            <option value="3">3 — Good</option>
+                            <option value="2">2 — Fair</option>
+                            <option value="1">1 — Not for me</option>
+                        </select></label><label>Comment<textarea name="comment" required rows="2"
+                            placeholder="What did you think?"></textarea></label></div><button
+                    class="button button-dark" type="submit">Post comment <span>→</span></button>
+            </form>{% else %}<p class="muted-copy">Please <a class="text-link" href="{{ url_for('login') }}">log in</a>
+                to leave a rating or comment.</p>{% endif %}
+        </div>
+    </section>
+    <section class="recommendations">
+        <div class="recommendations-heading">
+            <div><span class="eyebrow">You may also like</span>
+                <h2>More from <em>{{ product.category }}.</em></h2>
+            </div><a class="text-link" href="{{ url_for('category', category_name=product.category) }}">View all
+                    <span>→</span></a>
+            </div>
+            <div class="product-grid recommendation-grid">
+                {% for recommendation in recommendations %}{% with product=recommendation %}{% include "_product_card.html" %}{% endwith %}{% endfor %}
+            </div>
+    </section>
+</main>
+<script>document.addEventListener('click', (event) => { const thumbnail = event.target.closest('[data-product-image]'); const mainImage = document.querySelector('[data-main-product-image]'); if (thumbnail && mainImage) mainImage.src = thumbnail.dataset.productImage; });</script>
+{% endblock %}

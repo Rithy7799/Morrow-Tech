@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Notifications — MorrowTech{% endblock %}
+{% block content %}<main class="notifications-page">
+    <div class="notifications-heading"><span class="eyebrow">Your account / Order updates</span>
+        <h1>Order <em>notifications.</em></h1>
+        <p>Stay close to every purchase from confirmation to delivery.</p>
+    </div>
+        <section class="notification-list">{% for order in orders %}<button type="button" class="notification-card"
+            data-invoice-id="{{ order.id }}" aria-label="View invoice for order {{ order.id }}">
+            <div class="notification-icon">{% if order.status == 'Shipped' %}↗{% elif order.status == 'Packed' %}□{%
+                elif order.status == 'Cancelled' %}×{% else %}✓{% endif %}</div>
+            <div class="notification-copy"><strong>Order #{{ order.id }} is {{ order.status|lower }}.</strong>
+                <p>{% if order.status == 'Shipped' %}Your order is on its way. Keep an eye out for delivery.{% elif
+                    order.status == 'Packed' %}Your items are packed and preparing to leave us.{% elif order.status ==
+                    'Cancelled' %}This order has been cancelled. Please contact support if you need help.{% else %}We
+                    received your order and will update you as it moves forward.{% endif %}</p><span>{{
+                    order.created_at[:10] }} · {{ order.total|currency }}</span>
+            </div><span class="status-pill status-{{ order.status|lower }}">{{ order.status }}</span>
+        </button>{% else %}<div class="empty-admin"><span>♧</span>
+            <p>Order updates will appear here after you make a purchase.</p><a class="button button-dark"
+                href="{{ url_for('storefront') }}#shop">Browse products <span>→</span></a>
+        </div>{% endfor %}</section>
+</main>{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Manage products — MorrowTech{% endblock %}
+{% block content %}
+<main class="admin-page product-management">
+    <div class="admin-top">
+        <div><span class="eyebrow">MorrowTech / Catalog management</span>
+            <h1>All <em>products.</em></h1>
+        </div>
+        <div class="panel-actions"><a class="button button-light" href="{{ url_for('admin') }}">← Dashboard</a><button
+                class="button button-dark" data-product-modal>+ Add product</button></div>
+    </div>
+    <section class="admin-panel">
+        <div class="panel-heading">
+            <div><span class="eyebrow">CRUD / Read, update, delete</span>
+                    <h2>{{ product_count }} catalog items</h2>
+            </div>
+            <form class="admin-product-search" method="get" action="{{ url_for('manage_products') }}"><input name="q"
+                    value="{{ query }}" placeholder="Search all products"><button class="button button-dark"
+                    type="submit">Search</button>{% if query %}<a href="{{ url_for('manage_products') }}">Clear</a>{%
+                endif %}</form>
+        </div>
+        <div class="management-list">
+            {% for product in products %}<article class="management-row">
+                <div class="mini-art" style="background:{{ product.color }};">{% if product.image1 %}<img
+                        src="{{ product.image1 }}" alt="{{ product.name }}">{% else %}{{ product.initials }}{% endif %}</div>
+                <div class="management-summary"><strong>{{ product.name }}</strong><span>{{ product.category }} · {{
+                        product.price|currency }}</span>
+                    <p>{{ product.description }}</p>
+                </div><button class="button button-light edit-product-button" type="button" data-edit-product
+                    data-edit-id="{{ product.id }}" data-edit-name="{{ product.name }}"
+                    data-edit-description="{{ product.description }}" data-edit-category="{{ product.category }}"
+                    data-edit-price="{{ product.price }}" data-edit-color="{{ product.color }}"
+                    data-edit-image1="{{ product.image1 or '' }}" data-edit-image2="{{ product.image2 or '' }}"
+                    data-edit-image3="{{ product.image3 or '' }}">Edit</button>
+                <form method="post" action="{{ url_for('delete_product', product_id=product.id) }}"
+                    onsubmit="return confirm('Delete this product?');"><button class="delete-button" type="submit"
+                        aria-label="Delete {{ product.name }}">×</button></form>
+            </article>{% else %}<div class="empty-admin"><span>⌕</span>
+                <p>No products match “{{ query }}”.</p>
+            </div>{% endfor %}
+        </div>
+        {% if product_count %}<nav class="pagination" aria-label="Product pages">
+            {% if page > 1 %}<a href="{{ url_for('manage_products', page=page - 1, q=query) }}">← Previous</a>{% endif %}
+            <span>Page {{ page }} of {{ total_pages }} · {{ product_count }} products</span>
+            {% if page < total_pages %}<a href="{{ url_for('manage_products', page=page + 1, q=query) }}">Next →</a>{% endif %}
+        </nav>{% endif %}
+    </section>
+    {% include "_category_management.html" %}
+</main>
+<div class="modal-backdrop" data-product-dialog aria-hidden="true">
+    <section class="checkout-modal product-modal"><button class="icon-button modal-close" data-product-close
+            aria-label="Close">×</button><span class="eyebrow">Catalog / New item</span>
+        <h2>Add a product.</h2>
+        <form method="post" action="{{ url_for('add_product') }}" enctype="multipart/form-data"><label>Product
+                name<input name="name" required
+                    placeholder="e.g. Wireless headphones"></label><label>Description<textarea name="description"
+                    required rows="2" placeholder="A short description"></textarea></label>
+            <div class="form-two"><label>Category<select name="category" required>{% for category in categories %}<option value="{{ category.name }}">{{ category.name }}</option>{% endfor %}</select></label><label>Price<input name="price" type="number" min="0" step="0.01"
+                        required placeholder="48.00"></label></div><label>Color swatch<input name="color" type="color"
+                    value="#d9c7bd"></label>
+            <div class="image-slot-grid">{% for slot in [1, 2, 3] %}<label>Image {{ slot }}{% if slot == 1 %} <small>Main image</small>{% else %} <small>Gallery image</small>{% endif %}<input name="image{{ slot }}" type="file"
+                        accept="image/png,image/jpeg,image/webp"><input name="image{{ slot }}_url" type="url"
+                        placeholder="Or paste an image URL"></label>{% endfor %}
+            </div><button class="button button-dark button-full" type="submit">Publish product
+                <span>→</span></button>
+        </form>
+    </section>
+</div>
+<div class="modal-backdrop" data-edit-dialog aria-hidden="true">
+    <section class="checkout-modal product-modal"><button class="icon-button modal-close" data-edit-close
+            aria-label="Close">×</button><span class="eyebrow">Catalog / Edit item</span>
+        <h2>Edit product.</h2>
+        <form method="post" enctype="multipart/form-data" data-edit-form><label>Product name<input name="name" data-edit-field="name"
+                    required></label><label>Description<textarea name="description" data-edit-field="description"
+                    required rows="3"></textarea></label>
+            <div class="form-two"><label>Category<select name="category" data-edit-field="category"
+                        required>{% for category in categories %}<option value="{{ category.name }}">{{ category.name }}</option>{% endfor %}</select></label><label>Price<input name="price" data-edit-field="price" type="number" min="0"
+                        step="0.01" required></label></div><label>Color swatch<input name="color"
+                    data-edit-field="color" type="color"></label>
+            <p class="muted-copy">Choose a new image to replace the current one. Leave a slot empty to keep its image.</p>
+            <div class="image-slot-grid">{% for slot in [1, 2, 3] %}<label>Image {{ slot }}{% if slot == 1 %} <small>Main image</small>{% else %} <small>Gallery image</small>{% endif %}<img class="edit-image-preview" data-edit-image-preview="{{ slot }}" alt=""><input name="image{{ slot }}" type="file"
+                        accept="image/png,image/jpeg,image/webp"><input name="image{{ slot }}_url" type="url"
+                        placeholder="Or paste an image URL"></label>{% endfor %}
+            </div><button class="button button-dark button-full"
+                type="submit">Save changes <span>→</span></button>
+        </form>
+    </section>
+</div>
+<script>
+    document.addEventListener('click', (event) => {
+        const addDialog = document.querySelector('[data-product-dialog]');
+        const editDialog = document.querySelector('[data-edit-dialog]');
+        if (event.target.closest('[data-product-modal]')) addDialog.classList.add('is-visible');
+        if (event.target.closest('[data-product-close]') || event.target === addDialog) addDialog.classList.remove('is-visible');
+
+        const editButton = event.target.closest('[data-edit-product]');
+        if (editButton) {
+            const form = document.querySelector('[data-edit-form]');
+            form.action = `/admin/products/${editButton.dataset.editId}/edit`;
+            ['name', 'description', 'category', 'price', 'color'].forEach((field) => {
+                form.querySelector(`[data-edit-field="${field}"]`).value =
+                    editButton.dataset[`edit${field[0].toUpperCase()}${field.slice(1)}`];
+            });
+            [1, 2, 3].forEach((slot) => {
+                const fileInput = form.querySelector(`[name="image${slot}"]`);
+                const urlInput = form.querySelector(`[name="image${slot}_url"]`);
+                const preview = form.querySelector(`[data-edit-image-preview="${slot}"]`);
+                const imageUrl = editButton.dataset[`editImage${slot}`];
+                fileInput.value = '';
+                urlInput.value = '';
+                if (imageUrl) preview.src = imageUrl;
+                else preview.removeAttribute('src');
+                preview.classList.toggle('is-visible', Boolean(imageUrl));
+            });
+            editDialog.classList.add('is-visible');
+        }
+
+        if (event.target.closest('[data-edit-close]') || event.target === editDialog) editDialog.classList.remove('is-visible');
+    });
+</script>
+{% endblock %}

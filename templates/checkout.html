@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Checkout — Morrow Goods{% endblock %}
+{% block content %}<main class="checkout-page">
+    <div class="checkout-heading"><span class="eyebrow">Morrow Goods / Checkout</span>
+        <h1>Complete your <em>purchase.</em></h1>
+    </div>
+    <div class="checkout-layout" data-checkout-layout>
+        <form class="checkout-form" data-page-checkout data-buy-now-id="{{ buy_now_product.id if buy_now_product else '' }}"
+            data-buy-now-name="{{ buy_now_product.name if buy_now_product else '' }}"
+            data-buy-now-price="{{ buy_now_product.price if buy_now_product else '' }}"
+            data-buy-now-image="{{ buy_now_product.image1 if buy_now_product else '' }}"
+            data-buy-now-color="{{ buy_now_product.color if buy_now_product else '' }}"
+            data-buy-now-initials="{{ buy_now_product.initials if buy_now_product else '' }}">
+            <section>
+                <h2>Where should we send it?</h2>
+                <div class="form-two"><label>Full name<input name="name" required
+                            value="{{ current_user.name if current_user else '' }}"></label><label>Email<input
+                            name="email" type="email" required
+                            value="{{ current_user.email if current_user else '' }}"></label></div><label>Delivery
+                    address<textarea name="address" required rows="3"
+                    placeholder="Street, city, postal code">{{ saved_address }}</textarea></label>
+            </section>
+            <section>
+                <h2>Choose how to pay</h2>
+                <div class="payment-options">
+                    {% if saved_card %}<label class="payment-option">
+                        <input type="radio" name="payment_method" value="saved_card" required checked>
+                        <span><strong>{{ saved_card.card_name or 'Saved card' }}</strong>
+                            <small>Card ending {{ saved_card.card_last4 }}{% if saved_card.card_expiry %} · Expires {{ saved_card.card_expiry }}{% endif %}</small></span>
+                    </label>{% else %}<p class="muted-copy">No saved card yet. <a class="text-link" href="{{ url_for('profile') }}">Add one in your profile</a>.</p>{% endif %}
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="khqr" {% if not saved_card %}checked required{% endif %}>
+                        <span><strong>KHQR</strong></span>
+                    </label>
+                </div>
+            </section><button class="button button-dark button-full" type="submit">Complete purchase <span>→</span></button>
+        </form>
+        <aside class="checkout-summary"><span class="eyebrow">{{ 'Your purchase' if buy_now_product else 'Your bag' }}</span>
+            <div data-page-summary></div>
+            <div class="total-row"><span>Total</span><strong data-page-total>{{ buy_now_product.price|currency if buy_now_product else '$0.00' }}</strong></div>
+        </aside>
+    </div>
+    <section class="purchase-confirmation" data-purchase-confirmation role="status" tabindex="-1" hidden>
+        <span class="eyebrow">Purchase confirmed</span>
+        <h2>You're all set.</h2>
+        <p data-purchase-message></p>
+        <a class="button button-dark" href="{{ url_for('storefront') }}#shop">Continue shopping <span>→</span></a>
+    </section>
+</main>{% endblock %}

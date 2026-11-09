@@ -1,0 +1,37 @@
+<section class="admin-panel category-management">
+    <div class="panel-heading">
+        <div><span class="eyebrow">Catalog / Categories</span>
+            <h2>{{ category_count }} categories</h2>
+        </div>
+        <form class="category-create-form" method="post" action="{{ url_for('admin.create_category') }}">
+            <label>New category<input name="name" required maxlength="80" placeholder="e.g. Accessories"></label>
+            <button class="button button-dark" type="submit">Add category <span>+</span></button>
+        </form>
+    </div>
+    <div class="category-table-wrap">
+        <table class="category-table">
+            <thead><tr><th>Category</th><th>Products</th><th>Actions</th></tr></thead>
+            <tbody>{% for category in categories %}<tr>
+                <td><form class="category-edit-form" method="post"
+                        action="{{ url_for('admin.update_category', category_id=category.id) }}">
+                        <input name="name" value="{{ category.name }}" required maxlength="80" aria-label="Category name">
+                        <button class="button button-light" type="submit">Save</button>
+                    </form></td>
+                <td>{{ category.product_count }}</td>
+                <td><form method="post" action="{{ url_for('admin.delete_category', category_id=category.id) }}">
+                        <button class="delete-button" type="submit" aria-label="Delete {{ category.name }}"
+                            {% if category.product_count %}disabled title="Move or delete its products first"{% endif %}>×</button>
+                    </form></td>
+            </tr>{% else %}<tr><td colspan="3">No categories yet.</td></tr>{% endfor %}</tbody>
+        </table>
+        {% if request.path == url_for('admin') %}<nav class="pagination" aria-label="Category pages">
+            {% if categories_page > 1 %}<a href="{{ url_for('admin', view='categories', categories_page=categories_page - 1) }}">← Previous</a>{% endif %}
+            <span>Page {{ categories_page }} of {{ categories_total_pages }} · {{ category_count }} categories</span>
+            {% if categories_page < categories_total_pages %}<a href="{{ url_for('admin', view='categories', categories_page=categories_page + 1) }}">Next →</a>{% endif %}
+        </nav>{% else %}<nav class="pagination" aria-label="Category pages">
+            {% if categories_page > 1 %}<a href="{{ url_for('admin.products', categories_page=categories_page - 1, page=page, q=query) }}">← Previous</a>{% endif %}
+            <span>Page {{ categories_page }} of {{ categories_total_pages }} · {{ category_count }} categories</span>
+            {% if categories_page < categories_total_pages %}<a href="{{ url_for('admin.products', categories_page=categories_page + 1, page=page, q=query) }}">Next →</a>{% endif %}
+        </nav>{% endif %}
+    </div>
+</section>
