@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Your favorites — MorrowTech{% endblock %}
+{% block content %}
+<main class="listing-page favorites-page" data-favorites-page>
+    <div class="listing-heading">
+        <span class="eyebrow">Your collection / saved for later</span>
+        <h1>Favorite <em>pieces.</em></h1>
+        <p data-favorites-count>{{ favorites|length }} saved products.</p>
+    </div>
+    {% if favorites %}
+    <div class="product-grid" data-favorites-grid>
+        {% for product in favorites %}{% include "_product_card.html" %}{% endfor %}
+    </div>
+    {% else %}
+    <p class="category-empty-state">Your saved products will show up here.</p>
+    {% endif %}
+</main>
+{% endblock %}

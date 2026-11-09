@@ -1488,6 +1488,10 @@ select:focus {
     margin-top: 24px
 }
 
+.profile-columns.profile-orders {
+    grid-template-columns: minmax(0, 1fr)
+}
+
 .profile-panel {
     background: #fff;
     padding: 28px

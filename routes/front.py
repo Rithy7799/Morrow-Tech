@@ -42,9 +42,8 @@ def render_profile(error=None, status=200):
     connection = get_db()
     account = connection.execute("SELECT * FROM users WHERE id = ?", (session["user"]["id"],)).fetchone()
     orders = connection.execute("SELECT * FROM orders WHERE email = ? ORDER BY id DESC", (session["user"]["email"],)).fetchall()
-    favorites = connection.execute("SELECT products.* FROM favorites JOIN products ON products.id = favorites.product_id WHERE favorites.user_id = ?", (session["user"]["id"],)).fetchall()
     connection.close()
-    return render_template("profile.html", account=account, orders=orders, favorites=favorites, error=error), status
+    return render_template("profile.html", account=account, orders=orders, error=error), status
 
 @front_bp.route("/")
 def storefront():
@@ -183,6 +182,19 @@ def profile():
         return redirect(url_for("auth.login"))
     return render_profile()
 
+@front_bp.route("/favorites")
+def favorites_page():
+    if not session.get("user"):
+        return redirect(url_for("auth.login"))
+    connection = get_db()
+    favorites = connection.execute(
+        "SELECT products.* FROM favorites JOIN products ON products.id = favorites.product_id "
+        "WHERE favorites.user_id = ? ORDER BY favorites.rowid DESC",
+        (session["user"]["id"],),
+    ).fetchall()
+    connection.close()
+    return render_template("favorites.html", favorites=favorites)
+
 @front_bp.route("/notifications")
 def notifications_page():
     if not session.get("user"):
@@ -311,12 +323,39 @@ def update_profile():
 @front_bp.post("/product/<int:product_id>/favorite")
 def toggle_favorite(product_id):
     if not session.get("user"):
+        if request.accept_mimetypes.best == "application/json":
+            return jsonify({
+                "error": "Please log in to save favorites.",
+                "login_url": url_for(
+                    "auth.login",
+                    next=url_for("front.product_detail", product_id=product_id),
+                ),
+            }), 401
         return redirect(url_for("auth.login"))
     connection = get_db()
-    existing = connection.execute("SELECT 1 FROM favorites WHERE user_id = ? AND product_id = ?", (session["user"]["id"], product_id)).fetchone()
-    connection.execute("DELETE FROM favorites WHERE user_id = ? AND product_id = ?", (session["user"]["id"], product_id)) if existing else connection.execute("INSERT INTO favorites (user_id, product_id) VALUES (?, ?)", (session["user"]["id"], product_id))
+    if not connection.execute("SELECT 1 FROM products WHERE id = ?", (product_id,)).fetchone():
+        connection.close()
+        if request.accept_mimetypes.best == "application/json":
+            return jsonify({"error": "Product not found."}), 404
+        return "Product not found.", 404
+    existing = connection.execute(
+        "SELECT 1 FROM favorites WHERE user_id = ? AND product_id = ?",
+        (session["user"]["id"], product_id),
+    ).fetchone()
+    if existing:
+        connection.execute(
+            "DELETE FROM favorites WHERE user_id = ? AND product_id = ?",
+            (session["user"]["id"], product_id),
+        )
+    else:
+        connection.execute(
+            "INSERT INTO favorites (user_id, product_id) VALUES (?, ?)",
+            (session["user"]["id"], product_id),
+        )
     connection.commit()
     connection.close()
+    if request.accept_mimetypes.best == "application/json":
+        return jsonify({"is_favorite": not bool(existing)})
     return redirect(request.referrer or url_for("front.product_detail", product_id=product_id))
 
 @front_bp.post("/product/<int:product_id>/review")

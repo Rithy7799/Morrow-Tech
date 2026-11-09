@@ -231,6 +231,56 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('submit', async (event) => {
+  const favoriteForm = event.target.closest('[data-favorite-form]');
+  if (favoriteForm) {
+    event.preventDefault();
+    const button = favoriteForm.querySelector('button[type="submit"]');
+    if (!button || button.disabled) return;
+    const productName = button.dataset.productName;
+    button.disabled = true;
+    try {
+      const response = await fetch(favoriteForm.action, {
+        method: 'POST',
+        headers: {Accept: 'application/json'},
+      });
+      const result = await response.json();
+      if (response.status === 401 && result.login_url) {
+        window.location.assign(result.login_url);
+        return;
+      }
+      if (!response.ok) throw new Error(result.error || 'Could not update favorites.');
+
+      const isFavorite = result.is_favorite;
+      button.classList.toggle('is-favorite', isFavorite);
+      button.setAttribute('aria-pressed', String(isFavorite));
+      button.setAttribute('aria-label', `${isFavorite ? 'Remove' : 'Add'} ${productName} ${isFavorite ? 'from' : 'to'} favorites`);
+      button.title = `${isFavorite ? 'Remove from' : 'Add to'} favorites`;
+      button.textContent = isFavorite ? '♥' : '♡';
+
+      if (!isFavorite && document.querySelector('[data-favorites-page]')) {
+        const card = favoriteForm.closest('.product-card');
+        const grid = document.querySelector('[data-favorites-grid]');
+        card?.remove();
+        const count = document.querySelector('[data-favorites-count]');
+        const remaining = grid?.querySelectorAll('.product-card').length || 0;
+        if (count) count.textContent = `${remaining} saved products.`;
+        if (grid && remaining === 0) {
+          const emptyState = document.createElement('p');
+          emptyState.className = 'category-empty-state';
+          emptyState.textContent = 'Your saved products will show up here.';
+          grid.replaceWith(emptyState);
+        }
+      }
+      showToast(isFavorite ? `${productName} added to favorites` : `${productName} removed from favorites`);
+    } catch (error) {
+      console.error('Could not update favorites:', error);
+      showToast(error.message || 'Could not update favorites. Please try again.');
+    } finally {
+      button.disabled = false;
+    }
+    return;
+  }
+
   if (!event.target.matches('[data-checkout-form]')) return;
   event.preventDefault();
   const form = Object.fromEntries(new FormData(event.target)); const cart = readCart();

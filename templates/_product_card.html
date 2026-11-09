@@ -8,9 +8,10 @@
         </div>
     </a>
     {% set is_favorite = product.id in favorite_product_ids %}
-    <form class="product-favorite-form" method="post"
+    <form class="product-favorite-form" method="post" data-favorite-form
         action="{{ url_for('toggle_favorite', product_id=product.id) }}">
         <button class="product-favorite-button{% if is_favorite %} is-favorite{% endif %}" type="submit"
+            data-product-name="{{ product.name }}"
             aria-label="{{ 'Remove ' if is_favorite else 'Add ' }}{{ product.name }} {{ 'from' if is_favorite else 'to' }} favorites"
             aria-pressed="{{ 'true' if is_favorite else 'false' }}" title="{{ 'Remove from' if is_favorite else 'Add to' }} favorites">
             {{ '♥' if is_favorite else '♡' }}

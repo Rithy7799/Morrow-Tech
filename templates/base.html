@@ -35,7 +35,7 @@
             <a href="{{ url_for('storefront') }}#shop">Categories</a>
             <a href="{{ url_for('front.category') }}">Products</a>
             <a href="{{ url_for('about') }}">About</a>
-            {% if current_user %}<a href="{{ url_for('profile') }}#favorites">Favorites</a>{% endif %}
+            {% if current_user %}<a href="{{ url_for('front.favorites_page') }}">Favorites</a>{% endif %}
             {% if current_user and current_user.role in ['admin', 'user'] %}<a class="admin-link"
                 href="{{ url_for('admin') }}">Admin desk <span>↗</span></a>{% endif %}
         </nav>
@@ -56,7 +56,7 @@
                 <i class="nav-icon bi bi-info-circle-fill" aria-hidden="true"></i>
                 <span>About</span>
             </a>
-            {% if current_user %}<a href="{{ url_for('profile') }}#favorites">
+            {% if current_user %}<a href="{{ url_for('front.favorites_page') }}">
                 <i class="nav-icon bi bi-heart-fill" aria-hidden="true"></i>
                 <span>Favorites</span>
             </a>{% endif %}

@@ -49,11 +49,7 @@
                     }}</strong><span>•••• {{ account.card_last4 }} · {{ account.card_expiry }}</span></div>{% endif %}
         </section>
     </div>
-    <div class="profile-columns">
-        <section class="profile-panel" id="favorites"><span class="eyebrow">Saved for later</span>
-            <h2>Favorites</h2>{% if favorites %}<div class="favorite-grid">{% for product in favorites %}{% include
-                "_product_card.html" %}{% endfor %}</div>{% else %}<p class="muted-copy">Your saved pieces will appear here.</p>{% endif %}
-        </section>
+    <div class="profile-columns profile-orders">
         <section class="profile-panel"><span class="eyebrow">Your history</span>
             <h2>Orders</h2>{% if orders %}{% for order in orders %}<div class="profile-order">
                 <div><strong>Order #{{ order.id }}</strong><span>{{ order.created_at[:10] }}</span></div><strong>{{
