@@ -38,7 +38,7 @@ MorrowTech is an online store for everyday tech, built with Flask and SQLite. Sh
 - **Backend:** Python, Flask 3, SQLite (through the standard `sqlite3` module)
 - **Frontend:** Jinja2 templates, plain CSS, plain JavaScript, Bootstrap Icons, and Google Fonts
 - **Security:** Werkzeug password hashing, HTTP-only `SameSite=Lax` session cookies (marked secure in production), and checks that only allow redirects within the site after sign-in
-- **Serving:** Gunicorn, through the `Procfile`
+- **Serving:** Waitress for Windows; Gunicorn through the `Procfile` on the deployment host
 
 ## Running it locally
 
@@ -54,6 +54,14 @@ python app.py
 ```
 
 Then open <http://127.0.0.1:8555>.
+
+To run the app with a production-style WSGI server on Windows, install the requirements above and start Waitress instead:
+
+```powershell
+waitress-serve --host=127.0.0.1 --port=8555 app:application
+```
+
+Stop the server with `Ctrl+C`. The `app:application` target is the Flask WSGI callable; Waitress is used here because Gunicorn does not run natively on Windows.
 
 The database (`shop.db`) and its tables are created on first run, and existing databases get any new columns added automatically. In development, an empty catalog is filled with 100 sample products and two demo accounts:
 
@@ -141,7 +149,7 @@ Marrow-Tech/
 │   ├── styles.css       # All styling, including the mobile and tablet layouts
 │   ├── app.js           # Bag, checkout, invoice pop-up, admin tabs, notifications
 │   └── uploads/         # Uploaded product images and profile photos
-├── requirements.txt     # Flask and Gunicorn
+├── requirements.txt     # Flask, Gunicorn, and Waitress
 └── Procfile             # Gunicorn start command for the host
 ```
 
