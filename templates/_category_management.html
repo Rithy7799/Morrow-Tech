@@ -3,8 +3,11 @@
         <div><span class="eyebrow">Catalog / Categories</span>
             <h2>{{ category_count }} categories</h2>
         </div>
-        <form class="category-create-form" method="post" action="{{ url_for('admin.create_category') }}">
+        <form class="category-create-form" method="post" enctype="multipart/form-data"
+            action="{{ url_for('admin.create_category') }}">
             <label>New category<input name="name" required maxlength="80" placeholder="e.g. Accessories"></label>
+            <label class="category-icon-upload">Category icon (optional)<input name="icon" type="file"
+                    accept="image/png,image/jpeg,image/webp"></label>
             <button class="button button-dark" type="submit">Add category <span>+</span></button>
         </form>
     </div>
@@ -13,8 +16,13 @@
             <thead><tr><th>Category</th><th>Products</th><th>Actions</th></tr></thead>
             <tbody>{% for category in categories %}<tr>
                 <td><form class="category-edit-form" method="post"
+                        enctype="multipart/form-data"
                         action="{{ url_for('admin.update_category', category_id=category.id) }}">
+                        {% if category.icon %}<img class="category-admin-icon" src="{{ category.icon }}"
+                            alt="{{ category.name }} icon">{% endif %}
                         <input name="name" value="{{ category.name }}" required maxlength="80" aria-label="Category name">
+                        <label class="category-icon-upload">Replace icon<input name="icon" type="file"
+                                accept="image/png,image/jpeg,image/webp"></label>
                         <button class="button button-light" type="submit">Save</button>
                     </form></td>
                 <td>{{ category.product_count }}</td>

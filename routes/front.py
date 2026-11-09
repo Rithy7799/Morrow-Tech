@@ -1,10 +1,11 @@
 import ast
 import json
+import math
 import re
 import sqlite3
 from pathlib import Path, PurePosixPath
 from uuid import uuid4
-from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, jsonify, redirect, render_template, request, session, url_for
 from urllib.parse import urlsplit
 from store import PAGE_SIZE, UPLOAD_DIR, get_db
 
@@ -58,7 +59,7 @@ def storefront():
     else:
         total = connection.execute("SELECT COUNT(*) FROM products").fetchone()[0]
         products = connection.execute("SELECT * FROM products ORDER BY id DESC LIMIT ? OFFSET ?", (PAGE_SIZE, offset)).fetchall()
-    categories = connection.execute("SELECT DISTINCT category FROM products ORDER BY category").fetchall()
+    categories = connection.execute("SELECT name AS category, icon FROM categories ORDER BY name").fetchall()
     connection.close()
     return render_template("index.html", products=products, categories=categories, page=page, total_pages=(total + PAGE_SIZE - 1) // PAGE_SIZE, query=query)
 
@@ -67,15 +68,67 @@ def about_page():
     return render_template("about.html")
 
 @front_bp.route("/category/<category_name>")
-def category(category_name):
+@front_bp.route("/category")
+def category(category_name=None):
+    price_filters = {}
+    for key in ("min_price", "max_price"):
+        value = request.args.get(key, "").strip()
+        if value:
+            try:
+                price = float(value)
+            except ValueError:
+                abort(400, description=f"{key.replace('_', ' ').capitalize()} must be a number.")
+            if not math.isfinite(price) or price < 0:
+                abort(400, description=f"{key.replace('_', ' ').capitalize()} must be a non-negative number.")
+            price_filters[key] = price
+
+    sort = request.args.get("sort", "latest")
+    sort_orders = {
+        "latest": "id DESC",
+        "price_asc": "price ASC, id DESC",
+        "price_desc": "price DESC, id DESC",
+        "name_asc": "name COLLATE NOCASE ASC, id DESC",
+    }
+    if sort not in sort_orders:
+        sort = "latest"
+
+    conditions = []
+    values = []
+    if category_name is not None:
+        conditions.append("category = ?")
+        values.append(category_name)
+    if "min_price" in price_filters:
+        conditions.append("price >= ?")
+        values.append(price_filters["min_price"])
+    if "max_price" in price_filters:
+        conditions.append("price <= ?")
+        values.append(price_filters["max_price"])
+    where_clause = " AND ".join(conditions) or "1 = 1"
+
     connection = get_db()
     page = max(request.args.get("page", 1, type=int), 1)
     offset = (page - 1) * PAGE_SIZE
-    total = connection.execute("SELECT COUNT(*) FROM products WHERE category = ?", (category_name,)).fetchone()[0]
-    products = connection.execute("SELECT * FROM products WHERE category = ? ORDER BY id DESC LIMIT ? OFFSET ?", (category_name, PAGE_SIZE, offset)).fetchall()
-    categories = connection.execute("SELECT DISTINCT category FROM products ORDER BY category").fetchall()
+    total = connection.execute(f"SELECT COUNT(*) FROM products WHERE {where_clause}", values).fetchone()[0]
+    products = connection.execute(
+        f"SELECT * FROM products WHERE {where_clause} ORDER BY {sort_orders[sort]} LIMIT ? OFFSET ?",
+        tuple(values) + (PAGE_SIZE, offset),
+    ).fetchall()
+    categories = connection.execute("SELECT name AS category, icon FROM categories ORDER BY name").fetchall()
     connection.close()
-    return render_template("category.html", products=products, categories=categories, category_name=category_name, page=page, total_pages=(total + PAGE_SIZE - 1) // PAGE_SIZE)
+    return render_template(
+        "category.html",
+        products=products,
+        categories=categories,
+        category_name=category_name,
+        is_all=category_name is None,
+        page_title=category_name or "All products",
+        page=page,
+        total=total,
+        total_pages=max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE),
+        min_price=price_filters.get("min_price"),
+        max_price=price_filters.get("max_price"),
+        sort=sort,
+    )
 
 @front_bp.route("/product/<int:product_id>")
 def product_detail(product_id):

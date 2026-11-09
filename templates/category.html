@@ -1,18 +1,65 @@
 {% extends "base.html" %}
-{% block title %}{{ category_name }} — MorrowTech{% endblock %}
-{% block content %}<main class="listing-page">
-    <div class="listing-heading"><span class="eyebrow">Browse / category</span>
-        <h1>{{ category_name }} <em>pieces.</em></h1>
-        <p>{{ products|length }} products on this page.</p>
+{% block title %}{{ page_title }} — MorrowTech{% endblock %}
+{% block content %}
+{% set category_url = url_for('front.category') if is_all else url_for('category', category_name=category_name) %}
+<main class="listing-page">
+    <div class="listing-heading">
+        <span class="eyebrow">Browse / category</span>
+        <h1>{{ page_title }} <em>pieces.</em></h1>
+        <p>{{ total }} products found.</p>
     </div>
-    <div class="category-row category-links"><a class="filter-button" href="{{ url_for('storefront') }}#shop">All
-            pieces</a>{% for category in categories %}<a
-            class="filter-button {% if category.category == category_name %}active{% endif %}"
-            href="{{ url_for('category', category_name=category.category) }}">{{ category.category }}</a>{% endfor %}
+    <div class="category-layout">
+        <aside class="category-filter-card" aria-label="Product filters">
+            <h2>Filter products</h2>
+            <form class="category-filter-form" method="get">
+                <label for="category-sort">Sort by</label>
+                <select id="category-sort" name="sort">
+                    <option value="latest" {% if sort == "latest" %}selected{% endif %}>Newest</option>
+                    <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Price: low to high</option>
+                    <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Price: high to low</option>
+                    <option value="name_asc" {% if sort == "name_asc" %}selected{% endif %}>Name: A to Z</option>
+                </select>
+                <fieldset>
+                    <legend>Price range</legend>
+                    <div class="category-price-fields">
+                        <label for="min-price">Min</label>
+                        <input id="min-price" type="number" name="min_price" min="0" step="0.01"
+                            value="{{ min_price if min_price is not none else '' }}" placeholder="0">
+                        <label for="max-price">Max</label>
+                        <input id="max-price" type="number" name="max_price" min="0" step="0.01"
+                            value="{{ max_price if max_price is not none else '' }}" placeholder="No limit">
+                    </div>
+                </fieldset>
+                <button class="button button-dark category-apply-button" type="submit">Apply filters</button>
+                <a class="category-clear-link" href="{{ category_url }}">Clear filters</a>
+            </form>
+            <nav class="category-filter-categories" aria-label="Browse categories">
+                <h3>Categories</h3>
+                <a class="{% if is_all %}active{% endif %}" href="{{ url_for('front.category') }}">All products</a>
+                {% for category in categories %}
+                <a class="{% if category.category == category_name %}active{% endif %}"
+                    href="{{ url_for('category', category_name=category.category) }}">{% if category.icon %}<img
+                        class="category-filter-icon" src="{{ category.icon }}" alt="" loading="lazy">{% endif %}{{ category.category }}</a>
+                {% endfor %}
+            </nav>
+        </aside>
+        <section class="category-results" aria-label="{{ page_title }} products">
+            <div class="product-grid">
+                {% for product in products %}{% include "_product_card.html" %}{% endfor %}
+            </div>
+            {% if not products %}
+            <p class="category-empty-state">No products match these filters. Try changing your price range.</p>
+            {% endif %}
+            <div class="pagination">
+                {% if page > 1 %}
+                <a href="{{ url_for('front.category', page=page - 1, min_price=min_price, max_price=max_price, sort=sort) if is_all else url_for('category', category_name=category_name, page=page - 1, min_price=min_price, max_price=max_price, sort=sort) }}">← Previous</a>
+                {% endif %}
+                <span>Page {{ page }} of {{ total_pages }}</span>
+                {% if page < total_pages %}
+                <a href="{{ url_for('front.category', page=page + 1, min_price=min_price, max_price=max_price, sort=sort) if is_all else url_for('category', category_name=category_name, page=page + 1, min_price=min_price, max_price=max_price, sort=sort) }}">Next →</a>
+                {% endif %}
+            </div>
+        </section>
     </div>
-    <div class="product-grid">{% for product in products %}{% include "_product_card.html" %}{% endfor %}</div>
-    <div class="pagination">{% if page > 1 %}<a
-            href="{{ url_for('category', category_name=category_name, page=page - 1) }}">← Previous</a>{% endif
-        %}<span>Page {{ page }} of {{ total_pages }}</span>{% if page < total_pages %}<a
-            href="{{ url_for('category', category_name=category_name, page=page + 1) }}">Next →</a>{% endif %}</div>
-</main>{% endblock %}
+</main>
+{% endblock %}

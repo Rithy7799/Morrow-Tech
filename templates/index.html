@@ -43,7 +43,8 @@
         </div>
         <div class="category-row"><button class="filter-button active" data-filter="all">All products</button>{% for
             category in categories %}<a class="filter-button"
-                href="{{ url_for('category', category_name=category.category) }}">{{ category.category }}</a>{% endfor
+                href="{{ url_for('category', category_name=category.category) }}">{% if category.icon %}<img
+                    class="category-filter-icon" src="{{ category.icon }}" alt="" loading="lazy">{% endif %}{{ category.category }}</a>{% endfor
             %}</div>
         <div class="product-grid">{% for product in products %}{% include "_product_card.html" %}{% endfor %}</div>
         <div class="pagination">{% if page > 1 %}<a href="{{ url_for('storefront', page=page - 1, q=query) }}#shop">←

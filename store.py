@@ -226,13 +226,20 @@ def init_db():
         CREATE TABLE IF NOT EXISTS favorites (user_id INTEGER NOT NULL, product_id INTEGER NOT NULL, PRIMARY KEY (user_id, product_id));
         CREATE TABLE IF NOT EXISTS reviews (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, product_id INTEGER NOT NULL, rating INTEGER NOT NULL, comment TEXT NOT NULL, created_at TEXT NOT NULL);
     """)
-    connection.execute("CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL)")
+    connection.execute("CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT NOT NULL, icon TEXT)")
     connection.execute("CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)")
+    category_columns = {row[1] for row in connection.execute("PRAGMA table_info(categories)").fetchall()}
+    if "icon" not in category_columns:
+        connection.execute("ALTER TABLE categories ADD COLUMN icon TEXT")
     order_columns = {row[1] for row in connection.execute("PRAGMA table_info(orders)").fetchall()}
     if "payment_method" not in order_columns:
         connection.execute("ALTER TABLE orders ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'unrecorded'")
     product_columns = {row[1] for row in connection.execute("PRAGMA table_info(products)").fetchall()}
-    for column in ("image1", "image2", "image3"):
+    for column in (
+        "image1",
+        "image2",
+        "image3",
+    ):
         if column not in product_columns:
             connection.execute(f"ALTER TABLE products ADD COLUMN {column} TEXT")
     user_columns = {row[1] for row in connection.execute("PRAGMA table_info(users)").fetchall()}
