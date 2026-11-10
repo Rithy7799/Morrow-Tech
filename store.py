@@ -7,7 +7,10 @@ from flask import render_template, request, session, url_for
 from werkzeug.security import generate_password_hash
 
 BASE_DIR = Path(__file__).parent
-DATABASE = Path(os.environ.get("DATABASE_PATH", str(BASE_DIR / "shop.db"))).expanduser()
+# Vercel's deployment filesystem is read-only; /tmp is the only writable (ephemeral) location.
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+DEFAULT_DATABASE = Path("/tmp/shop.db") if ON_VERCEL else BASE_DIR / "shop.db"
+DATABASE = Path(os.environ.get("DATABASE_PATH", str(DEFAULT_DATABASE))).expanduser()
 UPLOAD_DIR = BASE_DIR / "static" / "uploads"
 PAGE_SIZE = 20
 DEMO_ADMIN_EMAIL = "admin@morrow.test"
@@ -246,7 +249,11 @@ def init_db():
     for column, definition in {"role": "TEXT NOT NULL DEFAULT 'customer'", "avatar": "TEXT", "phone": "TEXT", "address": "TEXT", "card_name": "TEXT", "card_last4": "TEXT", "card_expiry": "TEXT"}.items():
         if column not in user_columns:
             connection.execute(f"ALTER TABLE users ADD COLUMN {column} {definition}")
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        if not ON_VERCEL:
+            raise
     count = connection.execute("SELECT COUNT(*) FROM products").fetchone()[0]
     if count == 0 and seed_demo_data:
         if not connection.execute("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1").fetchone():
