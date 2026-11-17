@@ -188,6 +188,13 @@ if (adminTabList) {
 }
 
 document.addEventListener('click', (event) => {
+  const demoLoginButton = event.target.closest('[data-demo-login]');
+  if (demoLoginButton) {
+    const form = demoLoginButton.closest('form');
+    form.elements.email.value = demoLoginButton.dataset.email;
+    form.elements.password.value = demoLoginButton.dataset.password;
+    return;
+  }
   const invoiceTrigger = event.target.closest('[data-invoice-id]');
   if (invoiceTrigger) {
     openInvoice(invoiceTrigger.dataset.invoiceId);
